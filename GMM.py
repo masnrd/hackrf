@@ -21,7 +21,7 @@ class GMM_Analyzer(Analyzer):
         self.model: GaussianMixture = GaussianMixture(n_components=2, random_state=0)
         self.data: List[List[float]] = []
 
-    def plotData(self, average_hz: List[float], db: List[float], ax: Axes) -> None:
+    def plotData(self, X:List[List[float]], ax: Axes) -> None:
         """
         Fits the GMM model to the data and plots the results on the given matplotlib Axes.
 
@@ -33,10 +33,6 @@ class GMM_Analyzer(Analyzer):
             db (List[float]): The list of dB values corresponding to each frequency.
             ax (Axes): The matplotlib Axes object where the data will be plotted.
         """
-        # Prepare the data for GMM
-        self.data = [[hz, db_val] for hz, db_val in zip(average_hz, db)]
-        X = np.array(self.data)
-        
         # Fit the GMM model and predict cluster labels
         self.model.fit(X)
         cluster_labels = self.model.predict(X)

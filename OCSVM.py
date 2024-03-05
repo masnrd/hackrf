@@ -24,7 +24,7 @@ class OneClassSVM_Analyzer(Analyzer):
         self.model: OneClassSVM = OneClassSVM(nu=0.01, kernel='rbf', gamma='auto')
         self.data: List[List[float]] = []
 
-    def plotData(self, average_hz: List[float], db: List[float], ax: Axes) -> None:
+    def plotData(self, X:List[List[float]], ax: Axes) -> None:
         """
         Fits the One-Class SVM model to the data and plots the results on the given matplotlib Axes.
 
@@ -35,10 +35,6 @@ class OneClassSVM_Analyzer(Analyzer):
             db (List[float]): The list of dB values corresponding to each frequency.
             ax (Axes): The matplotlib Axes object where the data will be plotted.
         """
-        # Prepare the data for One-Class SVM
-        self.data = [[hz, db_val] for hz, db_val in zip(average_hz, db)]
-        X = np.array(self.data)
-        
         # Fit the One-Class SVM model and predict
         self.model.fit(X)
         pred = self.model.predict(X)

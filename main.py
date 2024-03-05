@@ -4,8 +4,9 @@ import matplotlib.animation as animation
 from animator import AnimationPlot
 # Import the analyzer classes if needed
 from OCSVM import OneClassSVM_Analyzer
-# from IF import IsolationForest_Analyzer
-# from GMM import GMM_Analyzer
+from IF import IsolationForest_Analyzer
+from GMM import GMM_Analyzer
+from HDBSCAN import HDBSCAN_Analyzer
 
 def main() -> None:
     """Main function to execute the animation plot.
@@ -18,11 +19,11 @@ def main() -> None:
     # Initialize the AnimationPlot with the matplotlib axes and optional analyzer.
     # The analyzer argument is omitted here, indicating the default plotting without any analysis.
     # If an analyzer is needed, pass the appropriate instance, e.g., GMM_Analyzer().
-    realTimePlot = AnimationPlot(ax)
+    analyzer = HDBSCAN_Analyzer()
+    realTimePlot = AnimationPlot(ax, analyzer)
     time.sleep(2)
     ani = animation.FuncAnimation(fig, realTimePlot.animate, frames=100, interval=100)
     plt.show()
 
 if __name__ == "__main__":
-    print(type(OneClassSVM_Analyzer()))
     main()
