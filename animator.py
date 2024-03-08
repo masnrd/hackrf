@@ -82,6 +82,7 @@ class AnimationPlot:
 
         average_hz = [int(record) for record in entries.keys()]
         db = [record for record in entries.values()]
+        X = np.array([[hz, db_val] for hz, db_val in zip(average_hz, db)])
         return average_hz, db
 
     def animate(self, i: int) -> None:

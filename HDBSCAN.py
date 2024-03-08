@@ -1,4 +1,5 @@
 import hdbscan
+from numpy.typing import NDArray
 from Analyzer import Analyzer
 from matplotlib.axes import Axes
 from typing import List
@@ -10,14 +11,23 @@ GREEN = '\033[92m'
 RESET = '\033[0m'  # Resets the color to default
 
 class HDBSCAN_Analyzer(Analyzer):
+    """
+    An analyzer that uses HDBSCAN clustering to analyze signal data.
+    """
 
     def __init__(self) -> None:
         self.model: hdbscan = hdbscan.HDBSCAN(min_cluster_size=18)
-        self.data: List[List[float]] = []
         self.start_time = time.time()
         self.count = 0
 
-    def plotData(self, X:List[List[float]], ax: Axes) -> None:
+    def plotData(self, X: NDArray[np.float64], ax: Axes) -> None:
+        """
+        Fits the HDBSCAN model to the data and plots the clusters that meet specific criteria.
+
+        Args:
+            X: A NumPy array of signal data, where each row contains frequency and dB values.
+            ax: The matplotlib axes to plot on.
+        """
         self.model.fit(X)
         labels = self.model.labels_
         centroids = []
@@ -54,4 +64,57 @@ class HDBSCAN_Analyzer(Analyzer):
                 # ax.axvline(max(points[:, 0]), color='r', linestyle='--', label=f'Cluster {int(label)} Low F: {min(points[:, 0]):.2f}')
         else:
             ax.scatter(X[:, 0], X[:, 1], s=1, color='grey', alpha=0.5)
+    
+    def analyse(self, X: NDArray[np.float64]) -> bool:
+        """
+        Analyzes the signal data using HDBSCAN clustering to determine if certain criteria are met.
+
+        Args:
+            X: A NumPy array of signal data, where each row contains frequency and dB values.
+
+        Returns:
+            True if the analysis criteria are met, otherwise False.
+        """
+        self.model.fit(X)
+        labels = self.model.labels_
+        centroids = self._calculate_centroids(X, labels)
+        if centroids.size > 0:
+            y_value_threshold = np.percentile(centroids[:, 2], 75)
+            high_y_centroids = centroids[centroids[:, 2] > y_value_threshold]
+
+            for label, centroid_x, centroid_y in high_y_centroids:
+                points = X[labels == label]
+                if self._cluster_criteria(points):
+                    return True
+        return False
+    
+    def _calculate_centroids(self, X: NDArray[np.float64], labels: np.ndarray) -> NDArray[np.float64]:
+        """
+        Calculates the centroids of the clusters formed by HDBSCAN.
+
+        Args:
+            X: The data points that have been clustered.
+            labels: The labels assigned to each data point by HDBSCAN.
+
+        Returns:
+            An NDArray of centroids, each row containing the label, x (frequency), and y (dB) of the centroid.
+        """
+        centroids = [(label, *points.mean(axis=0)) for label in set(labels) if label != -1
+                     for points in [X[labels == label]]]
+        
+        return np.array(centroids)
+    
+    def _cluster_criteria(self, points: NDArray[np.float64]) -> bool:
+        """
+        Determines if a cluster meets the specific criteria based on frequency spread and signal strength.
+
+        Args:
+            points: A NumPy array of points belonging to a cluster, each row contains frequency (Hz) and dB values.
+
+        Returns:
+            bool: True if the cluster meets the criteria, False otherwise.
+        """
+        return (max(points[:, 0]) - min(points[:, 0]) > 3 * 1e6 and
+                (max(points[:, 1]) + min(points[:, 1])) / 2 > -63)
+
                 
