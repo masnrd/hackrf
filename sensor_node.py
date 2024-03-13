@@ -66,7 +66,7 @@ class HackRFModule():
             13: '2461:2483',
             14: '2473:2495'
         }
-        self.command = [HACKRF_PREFIX+"hackrf_sweep", "-f", " ", "-N", "1", "-w", "30000"]
+        self.command = [HACKRF_PREFIX+"hackrf_sweep", "-f", " ", "-N", "1", "-w", "32768"]
         self.model = model
 
     def dataProcessing(self, X: NDArray[np.float64], channel: int) -> NDArray[np.float64]:
@@ -126,7 +126,6 @@ def process_stream(line: str) -> List[Dict[str, Any]]:
         out.append(record)
 
     return out
-
 
 def main() -> None:
     status = check_hackrf_device()
