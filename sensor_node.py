@@ -5,6 +5,7 @@ import hdbscan
 import numpy as np
 from numpy.typing import NDArray
 from typing import Dict, List, Any
+import socket
 
 
 HACKRF_PREFIX = "./hackrf/host/build/hackrf-tools/src/"
@@ -127,13 +128,23 @@ def process_stream(line: str) -> List[Dict[str, Any]]:
 
     return out
 
+
+def client(host='127.0.0.1', port=65432, message="Hello, Server!"):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((host, port))
+        s.sendall(message.encode())
+        print(f"Sent: {message}")
+
+
 def main() -> None:
     status = check_hackrf_device()
     if status:
         analyzer = HDBSCAN_Analyzer()
         sensor = HackRFModule(analyzer)
         while True:
-            print(sensor.scan(channel=1, time_frame=5, threshold=5))
+            scan_result = sensor.scan(channel=1, time_frame=5, threshold=5)
+            print(scan_result)
+            client(message=f"{scan_result}")
     else:
         print("Device not found")
 
