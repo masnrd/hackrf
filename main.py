@@ -29,10 +29,13 @@ def main() -> None:
     status = check_hackrf_device()
     if status:
         analyzer = HDBSCAN_Analyzer()
-        sensor = HackRFModule(analyzer)
+        sensor = HackRFModule(analyzer, "10.32.44.94", 12345)
         while True:
             try:
                 sensor.scan(channel=1, time_frame=5, threshold=5)
+            except KeyboardInterrupt:
+                print("shut down")
+                break
             except:
                 pass
     else:

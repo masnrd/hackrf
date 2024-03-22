@@ -62,7 +62,7 @@ class HackRFModule(SensorModule):
             13: '2461:2483',
             14: '2473:2495'
         }
-        self.command = ["hackrf_sweep", "-f", " " , "-N", "1", "-w", "30000"]
+        self.command = ["hackrf_sweep", "-f", " " , "-N", "1", "-w", "131072"]
         self.env = os.environ.copy()
         self.env["DYLD_LIBRARY_PATH"] = self.env.get("DYLD_LIBRARY_PATH", "")
         self.model = model
@@ -121,7 +121,7 @@ class HackRFModule(SensorModule):
                         for record in process_stream(line)])
             
             # Information about the receiving device
-            if self.receiver_ip: 
+            if self.receiver_ip:
                 serialized_X = pickle.dumps(X)
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect((self.receiver_ip, self.receiver_port))
