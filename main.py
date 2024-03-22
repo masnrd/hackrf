@@ -31,7 +31,10 @@ def main() -> None:
         analyzer = HDBSCAN_Analyzer()
         sensor = HackRFModule(analyzer)
         while True:
-            print(sensor.scan(channel=1, time_frame=5, threshold=5))
+            try:
+                sensor.scan(channel=1, time_frame=5, threshold=5)
+            except:
+                pass
     else:
         print("Device not found")
 

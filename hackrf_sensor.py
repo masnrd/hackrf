@@ -6,6 +6,8 @@ from utils import process_stream
 from Analyzer import Analyzer
 from numpy.typing import NDArray
 import time
+import socket
+import pickle
 
 class SensorModule(ABC):
     @abstractmethod
@@ -31,7 +33,7 @@ class HackRFModule(SensorModule):
         model (Analyzer): An instance of Analyzer used for signal analysis.
     """
     
-    def __init__(self, model: Analyzer) -> None:
+    def __init__(self, model: Analyzer, ip: str = "", port: int = 0) -> None:
         """
         Initializes the HackRFModule with a specific Analyzer model.
 
@@ -40,6 +42,9 @@ class HackRFModule(SensorModule):
         """
         if not isinstance(model, Analyzer):
             raise TypeError(f"Expected model to be an instance of Analyzer, got {type(model)} instead.")
+        
+        self.receiver_ip = ip
+        self.receiver_port = port 
         
         self.CHANNELS = {
             1: '2401:2423',
@@ -114,6 +119,16 @@ class HackRFModule(SensorModule):
             X = np.array([[int(record['average_hz']), record['db']] 
                         for line in output.split('\n')[:-1] 
                         for record in process_stream(line)])
+            
+            # Information about the receiving device
+            if self.receiver_ip: 
+                serialized_X = pickle.dumps(X)
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.connect((self.receiver_ip, self.receiver_port))
+                    header = len(serialized_X).to_bytes(4, byteorder='big')
+                    message = header + serialized_X
+                    sock.sendall(message)
+
             X = self.dataProcessing(X, channel)
             count += int(self.model.analyse(X))
         return count >= threshold
