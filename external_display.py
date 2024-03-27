@@ -4,6 +4,7 @@ from threading import Thread, Lock
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
+from HDBSCAN import HDBSCAN_Analyzer
 
 # Switch to a GUI backend compatible with your environment
 plt.switch_backend('TkAgg')
@@ -21,7 +22,13 @@ def update_plot(frame):
     ax.grid(True)
 
     if data_points.size:
-        ax.scatter(data_points[:, 0], data_points[:, 1], s=1, alpha=0.5)  # Plot the data points
+        X = data_points
+        mean_db = np.mean(X[:, 1])
+        X = X[X[:, 1] > mean_db]
+        ax.axhline(mean_db, color='r', linestyle='--', label=f'Mean dBm: {mean_db:.2f}')
+        analyser = HDBSCAN_Analyzer()
+        analyser.plotData(X, ax)
+        # ax.scatter(data_points[:, 0], data_points[:, 1], s=1, alpha=0.5)  # Plot the data points
 
 def animate():
     global fig
@@ -59,7 +66,6 @@ def handle_client_connection(client_socket):
     # Append new data to the global data_points array
     with Lock():  # Use a lock to prevent concurrent access to data_points
         data_points = X
-        # data_points = np.vstack([data_points, X])  # Stack the new data with the existing data
 
     client_socket.close()
 
