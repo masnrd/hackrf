@@ -121,7 +121,8 @@ class HackRFModule(SensorModule):
                         for record in process_stream(line)])
             
             # Information about the receiving device
-            if self.receiver_ip:
+            print("No Device")
+            if self.receiver_ip: 
                 serialized_X = pickle.dumps(X)
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect((self.receiver_ip, self.receiver_port))
