@@ -9,6 +9,12 @@ from GMM import GMM_Analyzer
 from HDBSCAN import HDBSCAN_Analyzer
 from hackrf_sensor import HackRFModule
 from utils import check_hackrf_device
+import socket
+import pickle
+
+RED = '\033[91m'
+GREEN = '\033[92m'
+RESET = '\033[0m'  # Resets the color to default
 
 def main() -> None:
     """Main function to execute the animation plot.
@@ -29,12 +35,32 @@ def main() -> None:
     status = check_hackrf_device()
     if status:
         analyzer = HDBSCAN_Analyzer()
-        sensor = HackRFModule(analyzer, "10.32.44.94", 12345)
+        receiver_ip = "192.168.69.168"
+        receiver_port = 12345
+        sensor = HackRFModule(analyzer, "192.168.69.168", 12345)
+        print("Set up")
         while True:
             try:
-                sensor.scan(channel=1, time_frame=5, threshold=5)
+            	count, threshold  = sensor.scan(channel=8, time_frame=2, threshold=3)
+            	print(f"Detection: {count > threshold}")
+            	if count > threshold:
+            	    print(f'{GREEN}Phone detected with count {count}{RESET}') 
+            	    serialized_data = pickle.dumps(f'Phone detected with count {count}')
+            	    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                        sock.connect((receiver_ip, receiver_port))
+                        header = len(serialized_data).to_bytes(4, byteorder='big') + 0x02.to_bytes(1, byteorder='big')
+                        message = header + serialized_data
+                        sock.sendall(message)
+            	else:
+            	    print(f'{RED}Phone not detected with count {count}{RESET}') 
+            	    serialized_data = pickle.dumps(f'Phone not detected with count {count}')
+            	    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                        sock.connect((receiver_ip, receiver_port))
+                        header = len(serialized_data).to_bytes(4, byteorder='big') + 0x02.to_bytes(1, byteorder='big')
+                        message = header + serialized_data
+                        sock.sendall(message)
             except KeyboardInterrupt:
-                print("shut down")
+                print("\nShutting down")
                 break
             except:
                 pass

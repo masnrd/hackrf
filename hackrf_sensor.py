@@ -62,7 +62,7 @@ class HackRFModule(SensorModule):
             13: '2461:2483',
             14: '2473:2495'
         }
-        self.command = ["hackrf_sweep", "-f", " " , "-N", "1", "-w", "131072"]
+        self.command = ["hackrf_sweep", "-f", " " , "-N", "1", "-w", "220000"]
         self.env = os.environ.copy()
         self.env["DYLD_LIBRARY_PATH"] = self.env.get("DYLD_LIBRARY_PATH", "")
         self.model = model
@@ -87,9 +87,9 @@ class HackRFModule(SensorModule):
         low = int(low) * 1e6
         high = int(high) * 1e6
         mean_db = np.mean(X[:, 1])
-        X = X[X[:, 0] < high]
-        X = X[X[:, 0] > low]
-        X = X[X[:, 1] > mean_db]
+        # X = X[X[:, 0] < high]
+        # X = X[X[:, 0] > low]
+        # X = X[X[:, 1] > mean_db]
         return X
     
     def scan(self, channel: int, time_frame: float, threshold: int) -> bool:
@@ -119,16 +119,20 @@ class HackRFModule(SensorModule):
             X = np.array([[int(record['average_hz']), record['db']] 
                         for line in output.split('\n')[:-1] 
                         for record in process_stream(line)])
+                        
+            count += self.model.analyse(X)
+            if np.mean(X[:, 1]) > -59:
+                count += 1
             
             # Information about the receiving device
-            if self.receiver_ip:
-                serialized_X = pickle.dumps(X)
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect((self.receiver_ip, self.receiver_port))
-                    header = len(serialized_X).to_bytes(4, byteorder='big')
-                    message = header + serialized_X
-                    sock.sendall(message)
+            #if self.receiver_ip:
+            #    serialized_X = pickle.dumps(X)
+            #    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            #        sock.connect((self.receiver_ip, self.receiver_port))
+            #        header = len(serialized_X).to_bytes(4, byteorder='big') + 0x01.to_bytes(1, byteorder='big')
+            #        message = header + serialized_X
+            #        sock.sendall(message)
 
-            X = self.dataProcessing(X, channel)
-            count += int(self.model.analyse(X))
-        return count >= threshold
+            # X = self.dataProcessing(X, channel)
+            
+        return count, threshold

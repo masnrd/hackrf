@@ -16,7 +16,7 @@ class HDBSCAN_Analyzer(Analyzer):
     """
 
     def __init__(self) -> None:
-        self.model: hdbscan = hdbscan.HDBSCAN(min_cluster_size=18)
+        self.model: hdbscan = hdbscan.HDBSCAN(min_cluster_size=8)
         self.start_time = time.time()
         self.count = 0
 
@@ -78,15 +78,15 @@ class HDBSCAN_Analyzer(Analyzer):
         self.model.fit(X)
         labels = self.model.labels_
         centroids = self._calculate_centroids(X, labels)
-        if centroids.size > 0:
-            y_value_threshold = np.percentile(centroids[:, 2], 75)
+        count = 0
+        if centroids.shape[0] > 0:
+            y_value_threshold = -60
             high_y_centroids = centroids[centroids[:, 2] > y_value_threshold]
-
             for label, centroid_x, centroid_y in high_y_centroids:
-                points = X[labels == label]
-                if self._cluster_criteria(points):
-                    return True
-        return False
+                # points = X[labels == label]
+                # if self._cluster_criteria(points):
+                count += 1
+        return count
     
     def _calculate_centroids(self, X: NDArray[np.float64], labels: np.ndarray) -> NDArray[np.float64]:
         """
@@ -99,10 +99,15 @@ class HDBSCAN_Analyzer(Analyzer):
         Returns:
             An NDArray of centroids, each row containing the label, x (frequency), and y (dB) of the centroid.
         """
-        centroids = [(label, *points.mean(axis=0)) for label in set(labels) if label != -1
-                     for points in [X[labels == label]]]
+        centroids = []
+        for label in set(labels):
+            if label != -1:
+                points = X[labels == label]
+                centroid = points.mean(axis=0)
+                centroids.append((label, centroid))
+        centroids = np.array([(label, centroid[0], centroid[1]) for label, centroid in centroids])
         
-        return np.array(centroids)
+        return centroids
     
     def _cluster_criteria(self, points: NDArray[np.float64]) -> bool:
         """
