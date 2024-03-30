@@ -40,8 +40,6 @@ class HackRFModule(SensorModule):
         Args:
             model: An instance of the Analyzer class for analyzing signals.
         """
-        if not isinstance(model, Analyzer):
-            raise TypeError(f"Expected model to be an instance of Analyzer, got {type(model)} instead.")
         
         self.receiver_ip = ip
         self.receiver_port = port 
@@ -140,7 +138,7 @@ class HackRFModule(SensorModule):
                 result = ""
             serialized_data = pickle.dumps(f'Phone {result} detected with count {count}')
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.connect((receiver_ip, receiver_port))
+                sock.connect((self.receiver_ip, self.receiver_port))
                 header = len(serialized_data).to_bytes(4, byteorder='big') + 0x02.to_bytes(1, byteorder='big')
                 message = header + serialized_data
                 sock.sendall(message)
