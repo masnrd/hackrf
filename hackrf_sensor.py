@@ -131,8 +131,18 @@ class HackRFModule(SensorModule):
             #        sock.connect((self.receiver_ip, self.receiver_port))
             #        header = len(serialized_X).to_bytes(4, byteorder='big') + 0x01.to_bytes(1, byteorder='big')
             #        message = header + serialized_X
-            #        sock.sendall(message)
+            #       sock.sendall(message)
 
             # X = self.dataProcessing(X, channel)
+        if self.receiver_ip:
+            result = "not"
+            if count > threshold:
+                result = ""
+            serialized_data = pickle.dumps(f'Phone {result} detected with count {count}')
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.connect((receiver_ip, receiver_port))
+                header = len(serialized_data).to_bytes(4, byteorder='big') + 0x02.to_bytes(1, byteorder='big')
+                message = header + serialized_data
+                sock.sendall(message)
             
-        return count, threshold
+        return count > threshold

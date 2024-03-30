@@ -41,24 +41,8 @@ def main() -> None:
         print("Set up")
         while True:
             try:
-            	count, threshold  = sensor.scan(channel=8, time_frame=2, threshold=3)
-            	print(f"Detection: {count > threshold}")
-            	if count > threshold:
-            	    print(f'{GREEN}Phone detected with count {count}{RESET}') 
-            	    serialized_data = pickle.dumps(f'Phone detected with count {count}')
-            	    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                        sock.connect((receiver_ip, receiver_port))
-                        header = len(serialized_data).to_bytes(4, byteorder='big') + 0x02.to_bytes(1, byteorder='big')
-                        message = header + serialized_data
-                        sock.sendall(message)
-            	else:
-            	    print(f'{RED}Phone not detected with count {count}{RESET}') 
-            	    serialized_data = pickle.dumps(f'Phone not detected with count {count}')
-            	    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                        sock.connect((receiver_ip, receiver_port))
-                        header = len(serialized_data).to_bytes(4, byteorder='big') + 0x02.to_bytes(1, byteorder='big')
-                        message = header + serialized_data
-                        sock.sendall(message)
+            	detection  = sensor.scan(channel=8, time_frame=2, threshold=3)
+            	print(f"Detection: {detection}")
             except KeyboardInterrupt:
                 print("\nShutting down")
                 break
