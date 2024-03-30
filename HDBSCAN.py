@@ -10,7 +10,7 @@ RED = '\033[91m'
 GREEN = '\033[92m'
 RESET = '\033[0m'  # Resets the color to default
 
-class HDBSCAN_Analyzer(Analyzer):
+class HDBSCAN_Analyzer():
     """
     An analyzer that uses HDBSCAN clustering to analyze signal data.
     """
