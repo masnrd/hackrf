@@ -27,7 +27,7 @@ class AnimationPlot:
             model (Optional[Analyzer]): An optional model instance for advanced plotting. 
                                       If provided, it should have a 'plot_data' method.
         """
-        self.channel = 1
+        self.channel = 11
         self.ax = ax
         # self.CHANNELS = {
         #     1: '2390:2434',
