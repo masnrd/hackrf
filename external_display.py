@@ -11,9 +11,10 @@ plt.switch_backend('TkAgg')
 fig, ax = plt.subplots()
 
 data_points = np.empty((0, 2), float)  # Initialize an empty array for data points
+analyser = HDBSCAN_Analyzer()
 
 def update_plot(frame):
-    global ax
+    global ax, analyser
     ax.clear()  # Clear the axes to redraw
     ax.set_ylim([-80, 0])  # Set the y-axis limits
     ax.set_title('Scatter Plot of Average Hz vs dB')
@@ -24,9 +25,8 @@ def update_plot(frame):
     if data_points.size:
         X = data_points
         mean_db = np.mean(X[:, 1])
-        X = X[X[:, 1] > mean_db]
+        # X = X[X[:, 1] > mean_db]
         ax.axhline(mean_db, color='r', linestyle='--', label=f'Mean dBm: {mean_db:.2f}')
-        analyser = HDBSCAN_Analyzer()
         analyser.plotData(X, ax)
         # ax.scatter(data_points[:, 0], data_points[:, 1], s=1, alpha=0.5)  # Plot the data points
 
@@ -48,24 +48,27 @@ def receive_all(sock, n):
 def handle_client_connection(client_socket):
     global data_points
 
-    header = receive_all(client_socket, 4)
+    header = receive_all(client_socket, 5)
     if header is None:
         print("Connection closed by the client.")
         return
 
-    data_length = int.from_bytes(header, byteorder='big')
+    data_length = int.from_bytes(header[:4], byteorder='big')
+    data_type = header[4]
 
     received_data = receive_all(client_socket, data_length)
     if received_data is None:
         print("Data was not fully received.")
         return
+    if data_type == 0x01:
+        X = pickle.loads(received_data)  # Deserialize the received data
 
-    X = pickle.loads(received_data)  # Deserialize the received data
-    print("Received X:", X)
-
-    # Append new data to the global data_points array
-    with Lock():  # Use a lock to prevent concurrent access to data_points
-        data_points = X
+        # Append new data to the global data_points array
+        with Lock():  # Use a lock to prevent concurrent access to data_points
+            data_points = X
+    if data_type == 0x02:
+        text = pickle.loads(received_data)
+        print(f"Jetson response: {text}")
 
     client_socket.close()
 
@@ -77,7 +80,6 @@ def start_server(host='0.0.0.0', port=12345):
 
     while True:
         client_socket, address = server_socket.accept()
-        print(f"Connection from {address}")
         client_thread = Thread(target=handle_client_connection, args=(client_socket,))
         client_thread.start()
 
