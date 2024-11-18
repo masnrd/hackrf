@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import time
 import matplotlib.animation as animation
-from animator import AnimationPlot
+from animator import Detector
 # Import the analyzer classes if needed
 from OCSVM import OneClassSVM_Analyzer
 from IF import IsolationForest_Analyzer
@@ -26,4 +26,7 @@ def main() -> None:
     plt.show()
 
 if __name__ == "__main__":
-    main()
+    detector = Detector()
+    while True:
+        detector.detect()
+        
