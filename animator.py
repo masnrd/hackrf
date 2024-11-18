@@ -45,8 +45,8 @@ class AnimationPlot:
                                       If provided, it should have a 'plot_data' method.
         """
         self.ax = ax
-        self.command = ["hackrf_sweep", "-f", "2390:2434", "-N", "1", "-w", "30000"]
-        self.command = ["hackrf_sweep", "-f", "5150:5250", "-N", "1", "-w", "30000"]
+        # self.command = ["hackrf_sweep", "-f", "2390:2434", "-N", "1", "-w", "30000"]
+        self.command = ["hackrf_sweep", "-f", "5750:5850", "-N", "1", "-w", "30000"]
         self.env = os.environ.copy()
         self.env["DYLD_LIBRARY_PATH"] = self.env.get("DYLD_LIBRARY_PATH", "")
         self.model = model
@@ -95,20 +95,20 @@ class AnimationPlot:
 
         # self.ax.axvline(2.390e9, color='b', linestyle='--', label=f'lower band: {2.451e9:.2f}')
         # self.ax.axvline(2.434e9, color='b', linestyle='--', label=f'higher band: {2.473e9:.2f}')
-        self.ax.axvline(5.15e9, color='b', linestyle='--', label=f'lower Wi-Fi band: 5.15 GHz')
-        self.ax.axvline(5.25e9, color='b', linestyle='--', label=f'upper Wi-Fi band: 5.25 GHz')
+        self.ax.axvline(5.75e9, color='b', linestyle='--', label=f'lower Wi-Fi band: 5.15 GHz')
+        self.ax.axvline(5.85e9, color='b', linestyle='--', label=f'upper Wi-Fi band: 5.25 GHz')
 
         mean_db = np.mean(db)
         X = np.array([[hz, db_val] for hz, db_val in zip(average_hz, db)])
         # X = X[X[:, 0] < 2.434e9]
         # X = X[X[:, 0] > 2.390e9]
-        X = X[X[:, 0] < 5.25e9]
-        X = X[X[:, 0] > 5.15e9]
+        X = X[X[:, 0] < 5.85e9]
+        X = X[X[:, 0] > 5.75e9]
         X = X[X[:, 1] > mean_db]
 
-        if np.any(X[:, 1] > -40) and not self.detected:
-            #print("detected")
-            send_detected_packet('127.0.0.1', 65432)
+        if np.any(X[:, 1] > -60) and not self.detected:
+            print("detected")
+            send_detected_packet('172.16.92.200', 65432)
             self.detected = True
 
         self.ax.axhline(mean_db, color='r', linestyle='--', label=f'Mean dBm: {mean_db:.2f}')
